@@ -1,0 +1,47 @@
+#!/bin/bash
+
+[ -z "$1" ] && { printf "\n [+]Please Use recon example.com [+]\n";exit;}
+
+
+echo -e "[+] Start Assetfinder\n"
+assetfinder --subs-only $1 |tee assetfinder.txt 1>/dev/null
+
+echo -e "[+] Start Amass \n"
+amass enum -d $1 -o amass.txt 1>/dev/null
+
+echo -e "[+] Start Subfinder \n"
+subfinder -d $1 -o subfinder.txt 1>/dev/null
+
+echo -e "[+] Start Sublist3r \n"
+sublist3r -d $1 |tee sublist3r.txt 1>/dev/null
+
+echo -e "[+] Start Sort \n"
+cat sublist3r.txt subfinder.txt amass.txt assetfinder.txt|sort -u|tee Final-subs.txt
+
+echo -e "[+] Start Subzy \n"
+subzy -targets -timeout 5 -hide_fails -concurrency 40 |tee $1-subzy.txt 1>/dev/null
+
+echo -e "[+] Start Httpx \n"
+cat Final-subs.txt|httpx -threads 100 -timeout 4 -o $1-alive-subs.txt 1>/dev/null
+
+echo -e "[+] Start Titleextractor \n"
+cat $1-alive-subs.txt|titlextractor -f -c|tee $1-subs-title.txt 1>/dev/null
+
+echo -e "[+] Finish All Subdomain Enum for $1 target *$(wc -l "Final-subs.txt")* for None-Alive Subdomains and *$(wc -l "$1-alive-subs.txt")* for alive subdomains  "|notify
+
+echo -e "[+] Start CRLFUZZ [+]"
+crlfuzz -l $1-alive-subs.txt -s |tee crlfuzz.txt
+echo -e "[+] Finish CRLFUZZ And Found *$(wc -l < crlfuzz.txt)*"
+
+mkdir nuclei
+echo -e "[+] Start Nuclei [+]"
+nuclei -l $1-alive-subs.txt -t "$HOME/nuclei-templates/cves/*/*.yaml" -o nuclei/cves.txt -silent -c 60
+nuclei -l $1-alive-subs.txt -t "$HOME/nuclei-templates/exposed-panels/" -o nuclei/exposed-panels.txt -silent
+nuclei -l $1-alive-subs.txt -t "$HOME/nuclei-templates/token-spray/*/*.yaml" -o nuclei/token-spray.txt -c 60 -silent
+nuclei -l $1-alive-subs.txt -t "$HOME/nuclei-templates/exposures/*/*.yaml" -o nuclei/exposures.txt -c 60 -silent
+nuclei -l $1-alive-subs.txt -t "$HOME/nuclei-templates/vulnerabilities/*/*.yaml" -o nuclei/vulnerabilitiess.txt -c 60 -silent
+echo -e "[+] Nuclei List Directory *$(ls "./nuclei/")* "
+
+#echo -e "[+] Start Waybackurls with KXSS [+]"
+#cat $1-alive-subs.txt| waybackurls | grep "https://" | grep -v "png\|jpg\|css\|js\|gif\|txt\|pdf" | grep "=" | qsreplace | qsreplace -a|kxss|tee kxss.txt
+
