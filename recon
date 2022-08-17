@@ -27,7 +27,7 @@ cat Final-subs.txt|httpx -threads 100 -timeout 4 -o $1-alive-subs.txt 1>/dev/nul
 echo -e "[+] Start Titleextractor \n"
 cat $1-alive-subs.txt|titlextractor -f -c|tee $1-subs-title.txt 1>/dev/null
 
-echo -e "[+] Finish All Subdomain Enum for $1 target *$(wc -l "Final-subs.txt")* for None-Alive Subdomains and *$(wc -l "$1-alive-subs.txt")* for alive subdomains  "|notify
+echo -e "[+] Finish All Subdomain Enum for $1 target *$(wc -l "Final-subs.txt")* for None-Alive Subdomains and *$(wc -l "$1-alive-subs.txt")* for alive subdomains  "
 
 echo -e "[+] Start CRLFUZZ [+]"
 crlfuzz -l $1-alive-subs.txt -s |tee crlfuzz.txt
