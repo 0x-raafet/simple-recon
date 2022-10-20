@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export GO111MODULE=on
-go env -w GO111MODULE=on
+export GO111MODULE=auto
+go env -w GO111MODULE=auto
 
 go get -u github.com/tomnomnom/assetfinder 1>/dev/null
 if [ $? -eq 0 ] ; then echo -e "Install assetfinder [ DONE ]" ;
