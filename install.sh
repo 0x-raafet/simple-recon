@@ -35,13 +35,4 @@ go get -u golang.org/x/net/html 1>/dev/null
 go get -u github.com/dellalibera/titlextractor/ 1>/dev/null
 if [ $? -eq 0 ] ; then echo -e "Install titlextractor [ DONE ]" ;
 else echo -e "Install titlextractor [ FAILED ]" ; fi
-
-PID=$!
-i=1
-sp="/-\|"
-echo -n ' '
-while [ -d /proc/$PID ]
-do
-  printf "\b${sp:i++%${#sp}:1}"
-done
 echo -e " DONE"
